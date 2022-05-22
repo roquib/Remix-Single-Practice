@@ -1,6 +1,7 @@
 import { People } from "@prisma/client";
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import { Form, useLoaderData, useTransition } from "@remix-run/react";
+import { useEffect, useRef } from "react";
 import { db } from "~/utils/db.server";
 
 type LoaderData = {
@@ -33,6 +34,14 @@ export default function Index() {
     transition.state === "submitting" &&
     transition.submission.formData.get("_action") === "create";
 
+  let formRef = useRef();
+  let firstNameRef = useRef();
+  useEffect(() => {
+    if (!isAdding) {
+      formRef.current?.reset();
+      firstNameRef.current?.focus();
+    }
+  }, [isAdding]);
   return (
     <main>
       <h1>People</h1>
@@ -64,8 +73,8 @@ export default function Index() {
           </li>
         ))}
         <li>
-          <Form method="post">
-            <input type="text" name="firstName" />
+          <Form ref={formRef} method="post">
+            <input type="text" name="firstName" ref={firstNameRef} />
             <input type="text" name="lastName" />
             <button
               type="submit"
