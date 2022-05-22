@@ -1,6 +1,11 @@
 import { People } from "@prisma/client";
 import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
-import { Form, useLoaderData, useTransition } from "@remix-run/react";
+import {
+  Form,
+  useFetcher,
+  useLoaderData,
+  useTransition,
+} from "@remix-run/react";
 import { useEffect, useRef } from "react";
 import { db } from "~/utils/db.server";
 
@@ -9,6 +14,7 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async () => {
+  await new Promise((res) => setTimeout(res, Math.random() * 2000));
   const data: LoaderData = {
     people: await db.people.findMany(),
   };
@@ -22,6 +28,7 @@ export const action: ActionFunction = async ({ request }) => {
     return people;
   }
   if (_action === "delete") {
+    await new Promise((res) => setTimeout(res, Math.random() * 2000));
     return db.people.delete({
       where: { id: values.id },
     });
@@ -46,31 +53,8 @@ export default function Index() {
     <main>
       <h1>People</h1>
       <ul>
-        {people.map((person) => (
-          <li key={person.id}>
-            {person.firstName} {person.lastName}{" "}
-            <Form
-              style={{
-                display: "inline",
-              }}
-              method="post"
-            >
-              <input type="hidden" name="id" value={person.id} />
-              <input
-                type="hidden"
-                name="createdAt"
-                value={person.createdAt.toString()}
-              />
-              <button
-                type="submit"
-                aria-label="delete"
-                name="_action"
-                value="delete"
-              >
-                x
-              </button>
-            </Form>
-          </li>
+        {people.sort(byCreatedAt).map((person) => (
+          <PersonItem key={person.id} person={person} />
         ))}
         <li>
           <Form ref={formRef} method="post">
@@ -90,3 +74,33 @@ export default function Index() {
     </main>
   );
 }
+
+function PersonItem({ person }: { person: People }) {
+  let fetcher = useFetcher();
+  let isDeleting = fetcher.submission?.formData?.get("id") === person.id;
+  return (
+    <li
+      style={{
+        opacity: isDeleting ? 0.25 : 1,
+      }}
+      key={person.id}
+    >
+      {person.firstName} {person.lastName}{" "}
+      <fetcher.Form
+        style={{
+          display: "inline",
+        }}
+        method="post"
+      >
+        <input type="hidden" name="id" value={person.id} />
+        <input type="hidden" name="createdAt" value={person.createdAt} />
+        <button type="submit" aria-label="delete" name="_action" value="delete">
+          x
+        </button>
+      </fetcher.Form>
+    </li>
+  );
+}
+
+let byCreatedAt = (a: People, b: People) =>
+  new Date(a.createdAt) - new Date(b.createdAt);
