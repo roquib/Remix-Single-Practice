@@ -27,9 +27,16 @@ export const action: ActionFunction = async ({ request }) => {
     return people;
   }
   if (_action === "delete") {
-    return db.people.delete({
-      where: { id: values.id },
-    });
+    try {
+      if (Math.random() > 0.5) {
+        throw new Error("Something went wrong");
+      }
+      return db.people.delete({
+        where: { id: values.id },
+      });
+    } catch (e) {
+      return { error: true };
+    }
   }
 };
 export default function Index() {
@@ -76,11 +83,13 @@ export default function Index() {
 function PersonItem({ person }: { person: People }) {
   let fetcher = useFetcher();
   let isDeleting = fetcher.submission?.formData?.get("id") === person.id;
+  let isFailedDeletion = fetcher.data?.error;
   return (
     <li
       style={{
-        opacity: isDeleting ? 0.25 : 1,
+        color: isFailedDeletion ? "red" : "inherit",
       }}
+      hidden={isDeleting}
       key={person.id}
     >
       {person.firstName} {person.lastName}{" "}
@@ -92,8 +101,13 @@ function PersonItem({ person }: { person: People }) {
       >
         <input type="hidden" name="id" value={person.id} />
         <input type="hidden" name="createdAt" value={person.createdAt} />
-        <button type="submit" aria-label="delete" name="_action" value="delete">
-          x
+        <button
+          type="submit"
+          aria-label={isFailedDeletion ? "Retry" : "Delete"}
+          name="_action"
+          value="delete"
+        >
+          {isFailedDeletion ? "Retry" : "x"}
         </button>
       </fetcher.Form>
     </li>
