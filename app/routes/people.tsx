@@ -49,7 +49,7 @@ export default function Index() {
   let formRef = useRef();
   let firstNameRef = useRef();
   useEffect(() => {
-    if (!isAdding) {
+    if (isAdding) {
       formRef.current?.reset();
       firstNameRef.current?.focus();
     }
@@ -61,6 +61,13 @@ export default function Index() {
         {people.sort(byCreatedAt).map((person) => (
           <PersonItem key={person.id} person={person} />
         ))}
+        {isAdding && (
+          <li>
+            {transition.submission?.formData.get("firstName")}{" "}
+            {transition.submission?.formData.get("lastName")}
+            <button disabled>x</button>
+          </li>
+        )}
         <li>
           <Form ref={formRef} method="post">
             <input type="text" name="firstName" ref={firstNameRef} />
@@ -71,7 +78,7 @@ export default function Index() {
               value="create"
               disabled={isAdding}
             >
-              {isAdding ? "Creating..." : "Create"}
+              Add
             </button>
           </Form>
         </li>
