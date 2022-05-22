@@ -14,7 +14,6 @@ type LoaderData = {
 };
 
 export const loader: LoaderFunction = async () => {
-  await new Promise((res) => setTimeout(res, Math.random() * 2000));
   const data: LoaderData = {
     people: await db.people.findMany(),
   };
@@ -28,7 +27,6 @@ export const action: ActionFunction = async ({ request }) => {
     return people;
   }
   if (_action === "delete") {
-    await new Promise((res) => setTimeout(res, Math.random() * 2000));
     return db.people.delete({
       where: { id: values.id },
     });
